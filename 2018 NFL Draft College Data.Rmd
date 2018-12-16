@@ -1517,7 +1517,7 @@ high_2009 %>%
 
 ## Finding the most popular colleges over the 10 year period
 
-top_10 <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2014, data_2015, data_2016, data_2017, data_2018) %>%
+top_10 <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2013, data_2014, data_2015, data_2016, data_2017, data_2018) %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
@@ -1530,7 +1530,8 @@ first_top10 <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2013) 
   arrange(desc(n)) %>%
   slice(1:13)
 
-new <- left_join(top_10, first_top10)
+new <- left_join(top_10, first_top10) %>%
+  transmute(college_univ = college_univ, number = number, number_first = n)
 
 second_top10 <- bind_rows(data_2014, data_2015, data_2016, data_2017, data_2018) %>%
   clean_names() %>%
@@ -1538,6 +1539,19 @@ second_top10 <- bind_rows(data_2014, data_2015, data_2016, data_2017, data_2018)
   arrange(desc(n)) %>%
   slice(1:17)
 
-ggplot(top_10, aes(x = college_univ, y = number)) + geom_bar(stat = "identity")
+new2 <- left_join(new, second_top10) %>%
+  transmute(college_univ = college_univ, number = number, 
+            `2014-2018` = number_first, `2009-2013` = n)
+
+new3 <- new2 %>%
+gather(-college_univ, -number, key = time_period, value = number)
+
+# plot everything
+new3 %>%
+ggplot(aes(x = college_univ, y = number, fill = time_period)) +
+geom_col() + ggtitle("Distribution of Draft Picks for the Top 10 Programs")
+
+new3 %>%
+  write_rds("Colleges/bar")
 ```
 

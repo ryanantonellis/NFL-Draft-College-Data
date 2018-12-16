@@ -5,7 +5,9 @@ library(tidyverse)
 library(tidytext)
 library(plotly)
 library(shinythemes)
+library(ggplot2)
 
+bar <- read_rds("bar")
 map <- read_rds("map")
 high_2009 <- read_rds("high_2009")
 high_2010 <- read_rds("high_2010")
@@ -49,16 +51,16 @@ ui <- navbarPage(theme = shinytheme("slate"),
     
     # Show a plot of the generated distribution
     mainPanel(
-      tabsetPanel(type = "tab",
-                  tabPanel("geographical visualization"),
       plotlyOutput("map")
     )
   ))),
   
   tabPanel("Top Programs",
-           fluidPage())
-  
-  ))
+           fluidPage(titlePanel(h3("Top 10 Programs")),
+                     sidebarLayout(
+                       sidebarPanel(),
+                       mainPanel(plotOutput(outputId = "bar"))
+                     ))))
 
 
 ## server stuff
@@ -102,8 +104,10 @@ server <- function(input, output) {
     layout(title = "How College Representation in the NFL Draft Has Changed
            Over the Past 10 Years<br>(hover to toggle)", geo = g) %>%
     layout(plot_bgcolor = 'black')
-    
-  })  
+  })
+  
+  output$bar <- renderPlot({ggplot(new3, aes(x = college_univ, y = number, fill = time_period)) +
+      geom_col() + ggtitle("Distribution of Draft Picks for the Top 10 Programs")})
 }
 
 ## Run the App
