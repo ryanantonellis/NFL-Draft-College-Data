@@ -29,7 +29,7 @@ high_2018 <- read_rds("high_2018")
 ui <- navbarPage(theme = shinytheme("slate"), 
                  "Exploring College Representation in NFL Draft",
                  
-                 tabPanel("Map",
+                 tabPanel("map",
                           
   # Create fluid page to work with in our first tab panel
   fluidPage(
@@ -140,19 +140,17 @@ server <- function(input, output) {
   # Use coord_flip so that the x-labels are visible
   # Use a theme of choice to display the graph
   
-  output$Bar <- renderPlot({ggplot(new3, aes(x = college_univ, y = number_drafted, 
+  output$Bar <- renderPlot({ggplot(Bar, aes(x = college_univ, y = number_drafted, 
                                              fill = time_period)) +
       geom_col() + scale_fill_manual(values = c("red", "blue"),
                         labels = c("`2014-2018`", "`2009-2013`")) + 
       coord_flip() +
-    theme_ipsum() + 
       labs(x = "College", y ="Number of Draft Picks",
            
   # Set titles, subtitles, and captions
            title = "Distribution of Draft Picks for the Top 10 Programs",
            subtitle = "Grouped by 5-year Periods",
-           caption = "2009-2018") + 
-      scale_colour_ipsum(guide = FALSE)})
+           caption = "2009-2018")})
 }
 
 ## Run the App

@@ -1797,9 +1797,9 @@ gather(-college_univ, -number_drafted, key = time_period, value = number_drafted
 
 # plot everything
 # Use fill to create a segmented stack by time_period
-new3 %>%
-ggplot(aes(x = college_univ, y = number_drafted, fill = time_period)) +
-geom_col() + ggtitle("Distribution of Draft Picks for the Top 10 Programs")
+#new3 %>%
+#ggplot(aes(x = college_univ, y = number_drafted, fill = time_period)) +
+#geom_col() + ggtitle("Distribution of Draft Picks for the Top 10 Programs")
 
 # Last, write a function for new3 to be used in our app
 new3 %>%

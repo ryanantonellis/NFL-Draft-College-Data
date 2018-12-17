@@ -5,8 +5,8 @@ account: ryan-antonellis
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 618107
-bundleId: 1767054
+bundleId: 1767419
 url: https://ryan-antonellis.shinyapps.io/Colleges/
-when: 1544989137.65802
+when: 1545008054.47143
 asMultiple: FALSE
 asStatic: FALSE
