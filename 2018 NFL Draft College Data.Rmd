@@ -1,11 +1,13 @@
 ---
-title: "The Greatest NFL Defenses"
+title: "NFL Draft College Representation"
 author: "Ryan Antonellis"
 date: "October 19, 2018"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
+
+## Read in libraries that are necessary
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
@@ -19,12 +21,15 @@ library(mapdata)
 library(maps)
 library(ggplot2)
 library(plotly)
+library(hrbrthemes)
 ```
 
 ## Draft Data
 
 ```{r, message = FALSE}
 # Read in all Datasets
+# use the skip function to deal with unclean data
+# create a new column to include year
 
 data_2018 <- read_csv("2018data.txt", skip = 1, col_names = TRUE) %>%
   mutate(year = 2018)
@@ -56,6 +61,11 @@ data_2010 <- read_csv("data_2010.txt", skip = 1, col_names = TRUE) %>%
 data_2009 <- read_csv("data_2009.txt", skip = 1, col_names = TRUE) %>%
   mutate(year = 2009)
 
+# Create a new variable with all of our data joined
+# This is where the year columns will now come in handy
+# Clean names to get everything to a manageable state
+# count top 30 schools for each year in terms of number of draftees
+# Arrange from highest to lowest representation
 x <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2013, data_2014, data_2015, data_2016, data_2017, data_2018) %>%
   clean_names() %>%
   count(college_univ) %>%
@@ -67,11 +77,21 @@ x <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2013, data_2014,
 ## Draft Data grouped by Year
 
 ```{r, message = FALSE}
+
+# Create 2009 data frame
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for 2009
 high_2009 <- data_2009 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30) %>%
+  
+  # Create a new column for longitude
+  # We must geocode the longitude in manually for each school
+  # use case_when for this, what we learned in class
+  # repeat below
   mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
@@ -92,7 +112,7 @@ high_2009 <- data_2009 %>%
                           college_univ == "South Carolina" ~ -81.0274,
                           college_univ == "Wisconsin" ~ -89.4125,
                           college_univ == "California" ~ -122.2584,
-                          college_univ == "Cincinatti" ~ -84.5150,
+                          college_univ == "Cincinnati" ~ -84.5150,
                           college_univ == "Illinois" ~ -88.2272,
                           college_univ == "Missouri" ~ -92.3277,
                           college_univ == "Oregon" ~ -123.0726,
@@ -101,7 +121,17 @@ high_2009 <- data_2009 %>%
                           college_univ == "Auburn" ~ -85.4952,
                          college_univ == "Connecticut" ~ -72.2540,
                          college_univ == "Georgia Tech" ~ -84.3963,
-                         college_univ == "Maryland" ~ -76.9426)) %>%
+                         college_univ == "Maryland" ~ -76.9426,
+                         college_univ == "Cincinatti" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097)) %>%
+  
+  # Do the same as above for latitude
+  # This time geocode latitude values
+  # Use case_when
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -122,7 +152,7 @@ high_2009 <- data_2009 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -131,47 +161,32 @@ high_2009 <- data_2009 %>%
                          college_univ == "Auburn" ~ 32.5934,
                          college_univ == "Connecticut" ~ 41.8077,
                          college_univ == "Georgia Tech" ~ 33.7756,
-                         college_univ == "Maryland" ~ 38.9869)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "maroon",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red"))
-
+                         college_univ == "Maryland" ~ 38.9869,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799))
+    
+  # Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2009 %>% 
   write_rds("colleges/high_2009")
 
+# Create 2010 data frame now
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2010 <- data_2010 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   drop_na() %>%
   slice(1:30)%>%
+  
+  # Geocode longitudes and latitudes exactly like above
+  # copy and paste the schools we already know
   mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
@@ -212,7 +227,41 @@ high_2010 <- data_2010 %>%
                          college_univ == "Baylor" ~ -97.1143,
                          college_univ == "Mississippi St." ~ -88.7944,
                          college_univ == "UCLA" ~ -118.4452,
-                         college_univ == "West Virginia" ~ -79.9559)) %>%
+                         college_univ == "West Virginia" ~ -79.9559,
+                         college_univ == "Michigan" ~ -83.7382,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "North Carolina St." ~ -78.6821,
+                         college_univ == "Washington" ~ -122.3035,
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -233,7 +282,7 @@ high_2010 <- data_2010 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -253,57 +302,58 @@ high_2010 <- data_2010 %>%
                          college_univ == "Baylor" ~ 31.5497,
                          college_univ == "Mississippi St." ~ 33.4552,
                          college_univ == "UCLA" ~ 34.0689,
-                         college_univ == "West Virginia" ~ 39.6361)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "maroon",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow"))
+                         college_univ == "West Virginia" ~ 39.6361,
+                         college_univ == "Michigan" ~ 42.2780,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "North Carolina St." ~ 35.7847,
+                         college_univ == "Washington" ~ 47.6553,
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
 
+# Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2010 %>% 
   write_rds("Colleges/high_2010")
 
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2011 <- data_2011 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30)%>%
+  
+  # Geocode longitudes and latitudes exactly like above
+  # copy and paste the ones we already know
   mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
@@ -349,7 +399,36 @@ high_2011 <- data_2011 %>%
                          college_univ == "Mississippi" ~ -89.5384,
                          college_univ == "North Carolina St." ~ -78.6821,
                          college_univ == "Washington" ~ -122.3035,
-                         college_univ == "Virginia Tech" ~ -80.4234)) %>%
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -370,7 +449,7 @@ high_2011 <- data_2011 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -395,62 +474,53 @@ high_2011 <- data_2011 %>%
                          college_univ == "Mississippi" ~ 34.3647,
                          college_univ == "North Carolina St." ~ 35.7847,
                          college_univ == "Washington" ~ 47.6553,
-                         college_univ == "Virginia Tech" ~ 37.2284)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "red",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow",
-                         college_univ == "Michigan" ~ "maize",
-                         college_univ == "Mississippi" ~ "red",
-                         college_univ == "North Carolina St." ~ "red",
-                         college_univ == "Washington" ~ "purple",
-                         college_univ == "Virginia Tech" ~ "orange"))
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
 
+# # Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2011 %>% 
   write_rds("Colleges/high_2011")
 
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2012 <- data_2012 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30)%>%
+  
+  # geocode latitudes and longitudes exactly like above
+  # copy and paste the ones we already know
   mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
@@ -496,7 +566,36 @@ high_2012 <- data_2012 %>%
                          college_univ == "Mississippi" ~ -89.5384,
                          college_univ == "North Carolina St." ~ -78.6821,
                          college_univ == "Washington" ~ -122.3035,
-                         college_univ == "Virginia Tech" ~ -80.4234)) %>%
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -517,7 +616,7 @@ high_2012 <- data_2012 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -542,62 +641,53 @@ high_2012 <- data_2012 %>%
                          college_univ == "Mississippi" ~ 34.3647,
                          college_univ == "North Carolina St." ~ 35.7847,
                          college_univ == "Washington" ~ 47.6553,
-                         college_univ == "Virginia Tech" ~ 37.2284)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "red",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow",
-                         college_univ == "Michigan" ~ "maize",
-                         college_univ == "Mississippi" ~ "red",
-                         college_univ == "North Carolina St." ~ "red",
-                         college_univ == "Washington" ~ "purple",
-                         college_univ == "Virginia Tech" ~ "orange"))
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
 
+# Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2012 %>% 
   write_rds("Colleges/high_2012")
 
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2013 <- data_2013 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30)%>%
+  
+  # geocode latitudes and longitudes exactly like above
+  # copy and paste ones we already know
   mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
@@ -643,7 +733,36 @@ high_2013 <- data_2013 %>%
                          college_univ == "Mississippi" ~ -89.5384,
                          college_univ == "North Carolina St." ~ -78.6821,
                          college_univ == "Washington" ~ -122.3035,
-                         college_univ == "Virginia Tech" ~ -80.4234)) %>%
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -664,7 +783,7 @@ high_2013 <- data_2013 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -689,62 +808,53 @@ high_2013 <- data_2013 %>%
                          college_univ == "Mississippi" ~ 34.3647,
                          college_univ == "North Carolina St." ~ 35.7847,
                          college_univ == "Washington" ~ 47.6553,
-                         college_univ == "Virginia Tech" ~ 37.2284)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "red",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow",
-                         college_univ == "Michigan" ~ "maize",
-                         college_univ == "Mississippi" ~ "red",
-                         college_univ == "North Carolina St." ~ "red",
-                         college_univ == "Washington" ~ "purple",
-                         college_univ == "Virginia Tech" ~ "orange"))
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
 
+# Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2013 %>% 
   write_rds("Colleges/high_2013")
 
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2014 <- data_2014 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30)%>%
+  
+  # geocode latitudes and longitudes exactly like above
+  # copy and paste the ones we already know
   mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
@@ -790,7 +900,36 @@ high_2014 <- data_2014 %>%
                          college_univ == "Mississippi" ~ -89.5384,
                          college_univ == "North Carolina St." ~ -78.6821,
                          college_univ == "Washington" ~ -122.3035,
-                         college_univ == "Virginia Tech" ~ -80.4234)) %>%
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -811,7 +950,7 @@ high_2014 <- data_2014 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -836,62 +975,53 @@ high_2014 <- data_2014 %>%
                          college_univ == "Mississippi" ~ 34.3647,
                          college_univ == "North Carolina St." ~ 35.7847,
                          college_univ == "Washington" ~ 47.6553,
-                         college_univ == "Virginia Tech" ~ 37.2284)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "red",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow",
-                         college_univ == "Michigan" ~ "maize",
-                         college_univ == "Mississippi" ~ "red",
-                         college_univ == "North Carolina St." ~ "red",
-                         college_univ == "Washington" ~ "purple",
-                         college_univ == "Virginia Tech" ~ "orange"))
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
 
+# Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2014 %>% 
   write_rds("Colleges/high_2014")
 
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2015 <- data_2015 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30)%>%
+  
+  # geocode like above
+  # copy and paste the ones we already know
   mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
@@ -937,7 +1067,36 @@ high_2015 <- data_2015 %>%
                          college_univ == "Mississippi" ~ -89.5384,
                          college_univ == "North Carolina St." ~ -78.6821,
                          college_univ == "Washington" ~ -122.3035,
-                         college_univ == "Virginia Tech" ~ -80.4234)) %>%
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -958,7 +1117,7 @@ high_2015 <- data_2015 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -983,63 +1142,54 @@ high_2015 <- data_2015 %>%
                          college_univ == "Mississippi" ~ 34.3647,
                          college_univ == "North Carolina St." ~ 35.7847,
                          college_univ == "Washington" ~ 47.6553,
-                         college_univ == "Virginia Tech" ~ 37.2284)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "red",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow",
-                         college_univ == "Michigan" ~ "maize",
-                         college_univ == "Mississippi" ~ "red",
-                         college_univ == "North Carolina St." ~ "red",
-                         college_univ == "Washington" ~ "purple",
-                         college_univ == "Virginia Tech" ~ "orange"))
-
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
+    
+# Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2015 %>% 
   write_rds("Colleges/high_2015")
 
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2016 <- data_2016 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30)%>%
-  mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
+  
+  # geocode like above
+  # copy and paste ones we already know
+ mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
                           college_univ == "Georgia" ~ -83.3773,
@@ -1084,7 +1234,36 @@ high_2016 <- data_2016 %>%
                          college_univ == "Mississippi" ~ -89.5384,
                          college_univ == "North Carolina St." ~ -78.6821,
                          college_univ == "Washington" ~ -122.3035,
-                         college_univ == "Virginia Tech" ~ -80.4234)) %>%
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -1105,7 +1284,7 @@ high_2016 <- data_2016 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -1130,62 +1309,53 @@ high_2016 <- data_2016 %>%
                          college_univ == "Mississippi" ~ 34.3647,
                          college_univ == "North Carolina St." ~ 35.7847,
                          college_univ == "Washington" ~ 47.6553,
-                         college_univ == "Virginia Tech" ~ 37.2284)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "red",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow",
-                         college_univ == "Michigan" ~ "maize",
-                         college_univ == "Mississippi" ~ "red",
-                         college_univ == "North Carolina St." ~ "red",
-                         college_univ == "Washington" ~ "purple",
-                         college_univ == "Virginia Tech" ~ "orange"))
-
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
+    
+# Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2016 %>% 
   write_rds("Colleges/high_2016")
 
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2017 <- data_2017 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30)%>%
+  
+  # geocode like above
+  # copy and paste ones we already know
   mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
@@ -1231,7 +1401,36 @@ high_2017 <- data_2017 %>%
                          college_univ == "Mississippi" ~ -89.5384,
                          college_univ == "North Carolina St." ~ -78.6821,
                          college_univ == "Washington" ~ -122.3035,
-                         college_univ == "Virginia Tech" ~ -80.4234)) %>%
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -1252,7 +1451,7 @@ high_2017 <- data_2017 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -1277,63 +1476,54 @@ high_2017 <- data_2017 %>%
                          college_univ == "Mississippi" ~ 34.3647,
                          college_univ == "North Carolina St." ~ 35.7847,
                          college_univ == "Washington" ~ 47.6553,
-                         college_univ == "Virginia Tech" ~ 37.2284)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "red",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow",
-                         college_univ == "Michigan" ~ "maize",
-                         college_univ == "Mississippi" ~ "red",
-                         college_univ == "North Carolina St." ~ "red",
-                         college_univ == "Washington" ~ "purple",
-                         college_univ == "Virginia Tech" ~ "orange"))
-
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
+    
+# Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2017 %>% 
   write_rds("Colleges/high_2017")
 
+# Once again, use clean names to make names uniform
+# Arrange from highest to lowest
+# Slice only the top 30 colleges for this year
 high_2018 <- data_2018 %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:30)%>%
-  mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
+  
+  # geocode like above
+  # copy and paste ones we already know
+ mutate(long = case_when(college_univ == "Alabama" ~ -87.5391,
                           college_univ == "USC" ~ -118.2581,
                           college_univ == "LSU" ~ -91.1800,
                           college_univ == "Georgia" ~ -83.3773,
@@ -1378,7 +1568,36 @@ high_2018 <- data_2018 %>%
                          college_univ == "Mississippi" ~ -89.5384,
                          college_univ == "North Carolina St." ~ -78.6821,
                          college_univ == "Washington" ~ -122.3035,
-                         college_univ == "Virginia Tech" ~ -80.4234)) %>%
+                         college_univ == "Virginia Tech" ~ -80.4234,
+                         college_univ == "Cincinnati" ~ -84.5150,
+                         college_univ == "Rutgers" ~ -74.4474,
+                         college_univ == "Texas Tech" ~ -101.8783,
+                         college_univ == "Mississippi" ~ -89.5384,
+                         college_univ == "Virginia" ~ -78.5080,
+                         college_univ == "Wake Forest" ~ -78.5097,
+                         college_univ == "South Florida" ~ -82.4139,
+                         college_univ == "Arizona St." ~ -111.9281,
+                         college_univ == "Oklahoma St." ~ -97.0929,
+                         college_univ == "Arizona" ~ -110.9501,
+                         college_univ == "East Carolina" ~ -77.3646,
+                         college_univ == "Indiana" ~ -86.5133,
+                         college_univ == "Kansas" ~ -95.2558,
+                         college_univ == "Kentucky" ~ -84.5040,
+                         college_univ == "Colorado" ~ -105.2659,
+                         college_univ == "Appalachian St." ~ -81.6841,
+                         college_univ == "Boise St." ~ -116.2015,
+                         college_univ == "Nevada" ~ -119.8164,
+                         college_univ == "San Diego St." ~ -117.0719,
+                         college_univ == "SMU" ~ -96.7845,
+                         college_univ == "Kansas St." ~ -96.5847,
+                         college_univ == "Syracuse" ~ -76.1351,
+                         college_univ == "Boston Col." ~ -71.1685,
+                         college_univ == "Minnesota" ~ -93.2277,
+                         college_univ == "Fresno St." ~ -119.7458,
+                         college_univ == "Houston" ~ -95.3422,
+                         college_univ == "Louisiana Tech" ~ -92.6481,
+                         college_univ == "Temple" ~ -75.1495,
+                         college_univ == "Central Florida" ~ -81.2001)) %>%
   mutate(lat = case_when(college_univ == "Alabama" ~ 33.2140,
                          college_univ == "USC" ~ 34.0224,
                          college_univ == "LSU" ~ 30.4133,
@@ -1399,7 +1618,7 @@ high_2018 <- data_2018 %>%
                          college_univ == "South Carolina" ~ 33.9961,
                          college_univ == "Wisconsin" ~ 43.0766,
                          college_univ == "California" ~ 37.8718,
-                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Cincinnati" ~ 39.1329,
                          college_univ == "Illinois" ~ 40.1020,
                          college_univ == "Missouri" ~ 38.9404,
                          college_univ == "Oregon" ~ 44.0448,
@@ -1424,57 +1643,44 @@ high_2018 <- data_2018 %>%
                          college_univ == "Mississippi" ~ 34.3647,
                          college_univ == "North Carolina St." ~ 35.7847,
                          college_univ == "Washington" ~ 47.6553,
-                         college_univ == "Virginia Tech" ~ 37.2284)) %>%
-    mutate(color = case_when(college_univ == "Alabama" ~ "red",
-                         college_univ == "USC" ~ "gold",
-                         college_univ == "LSU" ~ "purple",
-                         college_univ == "Georgia" ~ "red",
-                         college_univ == "Florida" ~ "orange",
-                         college_univ == "Iowa" ~ "black",
-                         college_univ == "North Carolina" ~ "blue",
-                         college_univ == "Ohio St." ~ "silver",
-                         college_univ == "Oklahoma" ~ "red",
-                         college_univ == "Clemson" ~ "orange",
-                         college_univ == "Texas" ~ "orange",
-                         college_univ == "Miami (FL)" ~ "green",
-                         college_univ == "Nebraska" ~ "red",
-                         college_univ == "Penn St." ~ "navy",
-                         college_univ == "TCU" ~ "purple",
-                         college_univ == "Pittsburgh" ~ "gold",
-                         college_univ == "Oregon St." ~ "orange",
-                         college_univ == "South Carolina" ~ "maroon",
-                         college_univ == "Wisconsin" ~ "red",
-                         college_univ == "California" ~ "yellow",
-                         college_univ == "Cincinatti" ~ "black",
-                         college_univ == "Illinois" ~ "orange",
-                         college_univ == "Missouri" ~ "black",
-                         college_univ == "Oregon" ~ "lime",
-                         college_univ == "Tennessee" ~ "orange",
-                         college_univ == "Utah" ~ "red",
-                         college_univ == "Auburn" ~ "orange",
-                         college_univ == "Connecticut" ~ "navy",
-                         college_univ == "Georgia Tech" ~ "gold",
-                         college_univ == "Maryland" ~ "red",
-                         college_univ == "Florida St." ~ "maroon",
-                         college_univ == "Notre Dame" ~ "gold",
-                         college_univ == "Stanford" ~ "red",
-                         college_univ == "Arkansas" ~ "red",
-                         college_univ == "Louisville" ~ "red",
-                         college_univ == "Michigan St." ~ "green",
-                         college_univ == "Texas A&M" ~ "maroon",
-                         college_univ == "Baylor" ~ "green",
-                         college_univ == "Mississippi St." ~ "maroon",
-                         college_univ == "UCLA" ~ "gold",
-                         college_univ == "West Virginia" ~ "yellow",
-                         college_univ == "Michigan" ~ "maize",
-                         college_univ == "Mississippi" ~ "red",
-                         college_univ == "North Carolina St." ~ "red",
-                         college_univ == "Washington" ~ "purple",
-                         college_univ == "Virginia Tech" ~ "orange"))
-
+                         college_univ == "Virginia Tech" ~ 37.2284,
+                         college_univ == "Cincinatti" ~ 39.1329,
+                         college_univ == "Rutgers" ~ 40.5008,
+                         college_univ == "Texas Tech" ~ 33.5843,
+                         college_univ == "Mississippi" ~ 34.3647,
+                         college_univ == "Virginia" ~ 38.0336,
+                         college_univ == "Wake Forest" ~ 35.9799,
+                         college_univ == "South Florida" ~ 28.0587,
+                         college_univ == "Arizona St." ~ 33.4242,
+                         college_univ == "Oklahoma St." ~ 35.0078,
+                         college_univ == "Arizona" ~ 32.2319,
+                         college_univ == "East Carolina" ~ 35.6055,
+                         college_univ == "Indiana" ~ 39.1784,
+                         college_univ == "Kansas" ~ 38.9543,
+                         college_univ == "Kentucky" ~ 38.0307,
+                         college_univ == "Colorado" ~ 40.0076,
+                         college_univ == "Appalachian St." ~ 36.2135,
+                         college_univ == "Boise St." ~ 43.6027,
+                         college_univ == "Nevada" ~ 39.5442,
+                         college_univ == "San Diego St." ~ 32.7757,
+                         college_univ == "SMU" ~ 32.8412,
+                         college_univ == "Kansas St." ~ 39.1974,
+                         college_univ == "Syracuse" ~ 43.0392,
+                         college_univ == "Boston Col." ~ 42.3355,
+                         college_univ == "Minnesota" ~ 44.9740,
+                         college_univ == "Fresno St." ~ 36.8124,
+                         college_univ == "Houston" ~ 29.7199,
+                         college_univ == "Louisiana Tech" ~ 32.5264,
+                         college_univ == "Temple" ~ 39.9816,
+                         college_univ == "Central Florida" ~ 28.6024))
+    
+# Write a function for the above data frame
+  # Place it in a folder for later use in our app
 high_2018 %>% 
   write_rds("Colleges/high_2018")
 
+# Create new object that will be a map for our markers
+# Set the color, size, width, map settings, and borders
 g <- list(
   scope = 'usa',
   projection = list(type = 'albers usa'),
@@ -1486,24 +1692,42 @@ g <- list(
   countrycolor = toRGB("white")
 )
 
+# Create our map plot
+# add markers relative to our latitudes and longitudes that we provided
 plot_geo(high_2009, locationmode = 'USA-states', sizes = c(1,250)) %>% 
   add_markers(
-    x = ~long, y = ~lat, size = ~n, hoverinfo = "text",
+    x = ~long, y = ~lat, size = ~n, 
+  
+# Add interactive features to the markers
+# include college name over each marker
+    hoverinfo = "text",
     text = ~paste(high_2009$college_univ)
   ) %>% 
+
+# Test to see if this works, give random title
+# set geo equat to our object, g
   layout(title = "title", geo = g)
 ```
 
 ## Map Visualizations
 
 ```{r, message = FALSE}
+# Create a new object for our function
 first <- map_data("state")
 
+# Write a function that puts the map data into our app folder
 first %>% 
   write_rds("Colleges/map")
 
+# Create map base that will be the starting point for the app
+# set all aesthetics, use the same data as we will use in app
+# Adjust coord_fixed and play around with it until the data
+# looks presentable in a normally proportioned map
 gg1 <- ggplot() + geom_polygon(data = first, aes(x = long, y = lat, group = group), fill = "white", color = "gray") + coord_fixed(1.35)
 
+# Set our initial map to the app viewer
+# Only include 5 points, so they have to slide to see more or less
+# Start with our first year
 gg1 + geom_point(data = high_2009, aes(x = long, y = lat, color = college_univ, size = n))
 high_2009 %>% 
   slice(1:5)
@@ -1516,6 +1740,11 @@ high_2009 %>%
 ```{r, message = FALSE}
 
 ## Finding the most popular colleges over the 10 year period
+# Bind all data sets to get another object like x
+# However, now you are going to clean names
+# count and arrange in descending order, but now only pick the top 10 schools
+# This will be more focused
+# change the column names to things more usable
 
 top_10 <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2013, data_2014, data_2015, data_2016, data_2017, data_2018) %>%
   clean_names() %>%
@@ -1524,34 +1753,56 @@ top_10 <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2013, data_
   slice(1:10) %>%
   transmute(college_univ = college_univ, number = n)
 
-first_top10 <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2013) %>%
-  clean_names() %>%
-  count(college_univ) %>%
-  arrange(desc(n)) %>%
-  slice(1:13)
-
-new <- left_join(top_10, first_top10) %>%
-  transmute(college_univ = college_univ, number = number, number_first = n)
-
+# Create a top 10 object for the second 5 year period
+# bind only last 5 years
+# again, clean names
+# arrange in descending order and then peek through data
+# to find original top 10
+# In this case, they are all in the top 17
+# slice to 17th row
 second_top10 <- bind_rows(data_2014, data_2015, data_2016, data_2017, data_2018) %>%
   clean_names() %>%
   count(college_univ) %>%
   arrange(desc(n)) %>%
   slice(1:17)
 
-new2 <- left_join(new, second_top10) %>%
-  transmute(college_univ = college_univ, number = number, 
-            `2014-2018` = number_first, `2009-2013` = n)
+# Now make a new object that joins both above objects
+# We see this works, now change the column names
+new <- left_join(top_10, second_top10) %>%
+  transmute(college_univ = college_univ, number = number, number_second = n)
 
+# Now make a third object that contains the top 10's numbers from
+# the first 5 years
+# same process as second_top10
+# Peek through and slice through the number column that contains all 10 programs
+# that are in question
+first_top10 <- bind_rows(data_2009, data_2010, data_2011, data_2012, data_2013) %>%
+  clean_names() %>%
+  count(college_univ) %>%
+  arrange(desc(n)) %>%
+  slice(1:13)
+
+# Finally, just like the new object, we are going to use left_join
+# Change column names to the ones we will use in our app
+
+new2 <- left_join(new, first_top10) %>%
+  transmute(college_univ = college_univ, number_drafted = number, 
+            `2009-2013` = number_second, `2014-2018` = n)
+
+# Finally, create our last object and read new2 into it
+# Use gather to consolidate our data and prep for the stacked
+# bar graph
 new3 <- new2 %>%
-gather(-college_univ, -number, key = time_period, value = number)
+gather(-college_univ, -number_drafted, key = time_period, value = number_drafted)
 
 # plot everything
+# Use fill to create a segmented stack by time_period
 new3 %>%
-ggplot(aes(x = college_univ, y = number, fill = time_period)) +
+ggplot(aes(x = college_univ, y = number_drafted, fill = time_period)) +
 geom_col() + ggtitle("Distribution of Draft Picks for the Top 10 Programs")
 
+# Last, write a function for new3 to be used in our app
 new3 %>%
-  write_rds("Colleges/bar")
+  write_rds("Colleges/Bar")
 ```
 

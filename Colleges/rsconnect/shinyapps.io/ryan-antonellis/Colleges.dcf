@@ -1,0 +1,12 @@
+name: Colleges
+title: Colleges
+username:
+account: ryan-antonellis
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 618107
+bundleId: 1767054
+url: https://ryan-antonellis.shinyapps.io/Colleges/
+when: 1544989137.65802
+asMultiple: FALSE
+asStatic: FALSE
